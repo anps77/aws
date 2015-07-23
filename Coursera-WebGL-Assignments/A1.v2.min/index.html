@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>WebGL Exercise 1</title>
+
+    <link href="ext/bootstrap.min.css" rel="stylesheet">
+    <link href="ext/bootstrap-theme.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">WebGL Exercise 1</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="col-md-8">
+        <canvas id="gl-canvas" width="512" height="512">Oops ... your browser doesn't support the HTML5 canvas element</canvas>
+    </div>
+    <div class="col-md-4 data-model-container data-statistics-container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-tesselation">
+                        Tesselation
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-tesselation" class="panel-collapse collapse in">
+                <div class="panel-body">
+                    <div class="input-group">
+                        <span class="input-group-addon">Recursion Count:</span>
+                        <input id="input-tesselation-recursion-count" type="number" class="form-control" min="0" max="5" step="1" value="0" />
+                        <span class="input-group-addon">times</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-twist">
+                        Twist
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-twist" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="input-group">
+                            <span class="input-group-addon">Theta:</span>
+                            <input id="input-twist-theta-degrees" type="number" class="form-control" min="-180" max="180" step="1" value="0" />
+                            <span class="input-group-addon">degrees</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="Animates twist theta value. Amplitude: specified theta value. Frequency: 1 Hz">
+                        <label class="checkbox-inline">
+                            <input id="input-twist-animation" type="checkbox"> Animation
+                        </label>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="Move mouse cursor over canvas to modify twist origin location">
+                        <label class="checkbox-inline">
+                            <input id="input-twist-center-follows-mouse" type="checkbox"> Center follows mouse
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-mesh">
+                        Mesh
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-mesh" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="btn-group">
+                            <button id="button-mesh-clear-mesh" class="btn btn-default" type="submit">Clear</button>
+                            <div class="btn-group">
+                                <button class="btn btn-default dropdown-toggle" type="button" id="button-mesh-predefined-mesh" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                                    Load
+                                    <span class="caret"></span>
+                                </button>
+                                <ul id="ul-mesh-predefined-mesh" class="dropdown-menu" aria-labelledby="button-mesh-predefined-mesh">
+                                </ul>
+                            </div>
+                            <button id="button-mesh-get-vertices" class="btn btn-default" type="submit">Export</button>
+                        </div>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="In edit mode every three clicks on the canvas emit an extra triangle">
+                        <label class="checkbox-inline">
+                            <input id="input-mesh-edit-mode" type="checkbox" data-toggle="toggle" data-size="mini"> Edit Mode
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-display">
+                        Display
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-display" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <label class="checkbox-inline">
+                            <input id="input-display-solid" type="checkbox"> Solid
+                        </label>
+                    </li>
+                    <li class="list-group-item">
+                        <label class="checkbox-inline">
+                            <input id="input-display-wireframe" type="checkbox"> Wireframe
+                        </label>
+                    </li>
+                    <li class="list-group-item">
+                        <label class="checkbox-inline">
+                            <input id="input-display-fractal" type="checkbox"> Fractal
+                        </label>
+                    </li>
+                    <li class="list-group-item">
+                        <label class="checkbox-inline">
+                            <input id="input-display-textured" type="checkbox"> Textured
+                        </label>
+                    </li>
+                    <li class="list-group-item">
+                        <label class="checkbox-inline">
+                            <input id="input-display-blended" type="checkbox"> Blended
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-statistics">
+                        Statistics
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-statistics" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">Triangle count: <span class="badge" id="text-statistics-triangle-count"></span></li>
+                    <li class="list-group-item">Render time: <span class="badge" id="text-statistics-render-time"></span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="ext/jquery.min.js"></script>
+<script src="ext/bootstrap.min.js"></script>
+<script src="ext/transition.js"></script>
+<script src="ext/collapse.js"></script>
+<script src="ext/tooltip.js"></script>
+
+<script src="webgl-utils.js"></script>
+<script src="event-emitter.js"></script>
+<script src="data-model.js"></script>
+<script src="data-statistics.js"></script>
+<script src="mesh.js"></script>
+<script src="renderer.js"></script>
+<script src="exercise1.js"></script>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+uniform float twist;
+uniform vec2 twistOrigin;
+uniform float pointSize;
+varying vec2 vTextureCoord;
+
+void main()
+{
+    float x = vPosition.x - twistOrigin.x;
+    float y = vPosition.y - twistOrigin.y;
+    float r = sqrt(x*x + y*y);
+    float k = twist;
+    float a = k*r;
+    float ca = cos(a);
+    float sa = sin(a);
+    float x2 = x * ca - y * sa + twistOrigin.x;
+    float y2 = x * sa + y * ca + twistOrigin.y;
+    gl_Position = vec4(x2, y2, 0, 1);
+    gl_PointSize = pointSize;
+    vTextureCoord.x = (vPosition.x + 1.0) / 2.0;
+    vTextureCoord.y = (1.0 - vPosition.y) / 2.0;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+uniform vec4 color;
+varying vec2 vTextureCoord;
+uniform bool useTexture;
+uniform sampler2D sampler;
+
+void main()
+{
+    if(useTexture) {
+        gl_FragColor = texture2D(sampler, vTextureCoord);
+    } else {
+        gl_FragColor = color;
+    }
+    gl_FragColor[3] = color[3];
+}
+</script>
+
+</body>
+</html>
