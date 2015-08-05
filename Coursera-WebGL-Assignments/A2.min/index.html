@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>WebGL Exercise 2</title>
+
+    <link href="ext/bootstrap.min.css" rel="stylesheet">
+    <link href="ext/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="ext/bootstrap-colorpicker.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">WebGL Exercise 2</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="col-md-8">
+        <canvas id="gl-canvas" width="512" height="512">Oops ... your browser doesn't support the HTML5 canvas element</canvas>
+    </div>
+    <div class="col-md-4 data-model-container data-statistics-container">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-options">
+                        Options
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-options" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="input-group">
+                            <span class="input-group-addon">Line Width:</span>
+                            <input id="input-options-line-width" type="number" class="form-control" min="1" max="32" step="1" value="0" />
+                            <span class="input-group-addon">pixels</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="Line width is increased if 'pressure' is detected. This parameter controls maximum possible multiplication value for line width. Set to 1 if no pressure imitation is desired.">
+                        <div class="input-group">
+                            <span class="input-group-addon">Pressure multiplier:</span>
+                            <input id="input-options-max-pressure-multiplier" type="number" class="form-control" min="1" max="100" step="1" value="0" />
+                            <span class="input-group-addon">times</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div id="input-options-color" class="input-group colorpicker-component colorpicker-element">
+                            <span class="input-group-addon">Color:</span>
+                            <input type="text" value="" class="form-control">
+                            <span class="input-group-addon"><i></i></span>
+                        </div>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="Ink drain: alpha value exponentially decreases over time. Set to smaller values for more effect.">
+                        <div class="input-group">
+                            <span class="input-group-addon">Ink half life:</span>
+                            <input id="input-options-ink-half-life" type="number" class="form-control" min="500" max="10000" step="100" value="0" />
+                            <span class="input-group-addon">milliseconds</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item" data-toggle="tooltip" data-placement="left" title="Oscillates color hue for every curve with period of 30 seconds">
+                        <label class="checkbox-inline">
+                            <input id="input-options-hue-oscillation" type="checkbox"> Hue Oscillation
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default" data-toggle="tooltip" data-placement="left" title="Capturing every onmousemove event may result in extremal triangle count grow and may lead to poor performance. Use these settings to find optimal balance between image quality and performance.">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-drop-options">
+                        Event Drop Options
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-drop-options" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="input-group">
+                            <span class="input-group-addon">Drop if distance &lt;=</span>
+                            <input id="input-drop-options-less-than" type="number" class="form-control" min="0" max="512" step="1" value="0" />
+                            <span class="input-group-addon">pixels</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="input-group">
+                            <span class="input-group-addon">Unless time &gt;</span>
+                            <input id="input-drop-options-unless-time" type="number" class="form-control" min="0" max="30000" step="10" value="0" />
+                            <span class="input-group-addon">milliseconds</span>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="btn-group">
+                            <button id="button-drop-options-quality" class="btn btn-default" type="submit">Precision</button>
+                            <button id="button-drop-options-balance" class="btn btn-default" type="submit">Balance</button>
+                            <button id="button-drop-options-performance" class="btn btn-default" type="submit">Performance</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-drawing">
+                        Drawing
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-drawing" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="btn-group">
+                            <button id="button-mesh-clear-drawing" class="btn btn-default" type="submit">Clear</button>
+                            <button id="button-mesh-delete-last-curve" class="btn btn-default" type="submit">Delete last curve</button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a data-toggle="collapse" href="#panel-statistics">
+                        Statistics
+                    </a>
+                </h3>
+            </div>
+            <div id="panel-statistics" class="panel-collapse collapse in">
+                <ul class="list-group">
+                    <li class="list-group-item">Triangle count: <span class="badge" id="text-statistics-triangle-count"></span></li>
+                    <li class="list-group-item">Render time: <span class="badge" id="text-statistics-render-time"></span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="ext/jquery.min.js"></script>
+<script src="ext/bootstrap.min.js"></script>
+<script src="ext/transition.js"></script>
+<script src="ext/collapse.js"></script>
+<script src="ext/tooltip.js"></script>
+<script src="ext/bootstrap-colorpicker.min.js"></script>
+
+<script src="webgl-utils.js"></script>
+<script src="event-emitter.js"></script>
+<script src="data-model.js"></script>
+<script src="data-statistics.js"></script>
+<script src="geometry.js"></script>
+<script src="drawing.js"></script>
+<script src="renderer.js"></script>
+<script src="exercise2.js"></script>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+attribute vec4 vColor;
+varying vec4 color;
+
+void main()
+{
+    color = vColor;
+    gl_Position = vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 color;
+
+void main()
+{
+    gl_FragColor = color;
+}
+</script>
+
+</body>
+</html>

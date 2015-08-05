@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>Assignment: Twist</title>
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+uniform float twist;
+
+void
+main()
+{
+    float x = vPosition.x;
+    float y = vPosition.y;
+    float r = sqrt(x*x + y*y);
+    float k = twist;
+    float a = k*r;
+    float ca = cos(a);
+    float sa = sin(a);
+    float x2 = x * ca - y * sa;
+    float y2 = x * sa + y * ca;
+    gl_Position = vec4(x2, y2, 0, 1);
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+void
+main()
+{
+    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="a1.js"></script>
+</head>   
+
+<body>
+<div>
+tesselation subdivision count  0 <input id="slider-tesselation" type="range"
+ min="0" max="5" step="1" value="0" />
+ 5
+</div>
+<div>
+twist amount  -3 <input id="slider-twist" type="range"
+ min="-3" max="3" step="0.25" value="0" />
+ 3
+    <input id="button-twist-animate" type="button" value="Animate!" />
+</div>
+<div>
+    <input id="button-reset-triangles" type="button" value="Remove All Triangles" />
+    <input id="button-add-triangle" type="button" value="Enter/Exit Triangle Addition Mode" />
+    <span id="span-triangle-addition-mode-info">Triangle Addition Mode: off</span>
+</div>
+<div>
+    <input id="button-get-vertices" type="button" value="Give me vertices!" />
+    <input id="button-load-predefined" type="button" value="Load predefined mesh" />
+</div>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+</body>
+</html>
