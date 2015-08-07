@@ -74,6 +74,8 @@
 									<span class="caret"></span>
 								</button>
 								<ul id="ul-structure-add-object" class="dropdown-menu" aria-labelledby="button-structure-add-object">
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" id="button-structure-load">Load from library...</a></li>
 								</ul>
                             </div>
                             <div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-structure-remove-object">Remove</button></div>
@@ -83,7 +85,7 @@
                     <li class="list-group-item">
 						<div class="btn-group btn-group-justified btn-group-sm">
                             <div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-structure-boolean-union-all">Boolean Union All</button></div>
-							<div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-structure-save">Save To Library</button></div>
+							<div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-structure-save">Save To Library...</button></div>
 						</div>
                     </li>
                 </ul>
@@ -206,7 +208,8 @@
       <div class="modal-body">
         <p>This is a simple CAD-like application.</p>
         <p><b>Use 'Add Object'</b> to add objects to the model. <b>Use 'Selected'</b> to switch between objects. Once object is selected it can be transformed through UI or keyboard shortcuts.</p>
-        <p>The application is best used with a keyboard. Note: <b>keyboard shortcuts work only when canvas is focused. Click anywhere in the scene to focus it.</b> Mouse operations in the scene are not supported in current version.</p>
+        <p><b>Attention!</b> This application can load/save models from/to persistent <b>public non-moderated library</b>. Your model will be available to all other users of the application if you save it to the library. Do not use 'Add Object > Load From Library' and 'Save to Library' if you don't want to see others' models or publish yours.</p>
+        <p>The application is best used with a keyboard. Note: <b>keyboard shortcuts work only when canvas is focused. Click anywhere in the scene to focus it.</b> Mouse manipulations are not supported in the current version.</p>
         <p>Keys <kbd>W</kbd>, <kbd>S</kbd>, <kbd>A</kbd>, <kbd>D</kbd> <b>translate</b> selected model object or camera along X/Y axes. Keys <kbd>Z</kbd>, <kbd>X</kbd> translate along Z axis. The amount of translation is specified in GUI (Transformation > T). Using keyboard is equivalent to using GUI buttons in 'Transformation > T' area.</p>
         <p>Keys <kbd>Left</kbd>, <kbd>Right</kbd>, <kbd>Up</kbd>, <kbd>Down</kbd> <b>rotate</b> selected model object or camera around X/Y axes. Keys <kbd>Q</kbd>, <kbd>E</kbd> rotate around Z axis. The amount of rotation (degrees) is specified in GUI (Transformation > R). Using keyboard is equivalent to using GUI buttons in 'Transformation > R' area.</p>
         <p>Keys <kbd>R</kbd>, <kbd>T</kbd>, <kbd>F</kbd>, <kbd>G</kbd>, <kbd>V</kbd>, <kbd>B</kbd> <b>scale</b> selected model object along X/Y/Z axes. The amount of scale is specified in GUI (Transformation > S). Using keyboard is equivalent to using GUI buttons in 'Transformation > S' area.</p>
@@ -216,6 +219,31 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modal-load" tabindex="-1" role="dialog" aria-labelledby="modal-intro-label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="modal-intro-label">Load from library</h4>
+      </div>
+      <div class="modal-body">
+          <div class="alert alert-danger collapse" role="alert"></div>
+          <div class="table-responsive">
+            <table class="table table-striped">
+                <tr class="tr-modal-load-table-first-row">
+                    <th>Name</th>
+                    <th>Date</th>
+                </tr>
+            </table>
+          </div>
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>

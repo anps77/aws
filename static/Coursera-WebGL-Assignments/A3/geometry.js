@@ -7,6 +7,10 @@ function Vector(x, y, z)
     this.z = z;
 }
 
+Vector.attach = function(data) {
+	data.__proto__ = Vector.prototype;
+}
+
 Vector.prototype.subtract = function (otherVector) {
     return new Vector(this.x - otherVector.x, this.y - otherVector.y, this.z - otherVector.z);
 };
@@ -44,6 +48,11 @@ function Point(radiusVector) {
     this.radiusVector = radiusVector;
 }
 
+Point.attach = function(data) {
+	data.__proto__ = Point.prototype;
+    Vector.attach(data.radiusVector);
+}
+
 Point.prototype.subtract = function (otherPointOrVector) {
     if (otherPointOrVector instanceof Point) {
         return this.radiusVector.subtract(otherPointOrVector.radiusVector);
@@ -66,6 +75,10 @@ function Transformation(matrix) {
 		[0, 0, 0, 1]
 	];
 };
+
+Transformation.attach = function(data) {
+	data.__proto__ = Transformation.prototype;
+}
 
 Transformation.newScale = function(sx, sy, sz) {
 	return new Transformation([
@@ -149,7 +162,7 @@ Transformation.prototype.getInvertionForRigid = function() {
 			result.matrix[3][j] -= result.matrix[k][j] * this.matrix[3][k];
 		}
 	}
-	
+
 	return result;
 };
 
@@ -163,7 +176,7 @@ Transformation.prototype._multiplyTransformation = function (otherTransformation
 			}
 		}
 	}
-	
+
 	return result;
 };
 
@@ -175,7 +188,7 @@ Transformation.prototype._multiplyPointOrVector = function (pv, w) {
 			res[j] += this.matrix[i][j] * src[i];
 		}
 	}
-	
+
 	return new Vector(res[0], res[1], res[2]);
 };
 
@@ -193,4 +206,3 @@ Transformation.prototype.multiplyAssign = function (otherTransformation) {
 	this.matrix = this.multiply(otherTransformation).matrix;
 	return this;
 };
-

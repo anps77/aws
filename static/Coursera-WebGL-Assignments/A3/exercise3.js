@@ -10,12 +10,12 @@ window.onload = function() {
 
     var renderer = new Renderer($("#gl-canvas")[0]);
     var render = function() { renderer.render(dataModel, dataStatistics); };
-    
+
     $(window).on("resize", function() {
 		renderer.onresize();
 		render();
 	});
-	
+
 	var hotkeys = {
 		W:      "#button-transformation-translate-zn",
 		S:      "#button-transformation-translate-zp",
@@ -73,7 +73,82 @@ window.onload = function() {
 			}
 		}
 	});
-	
+
+	dataModel.setMeshGenerators({
+		"Sphere" : function() { return Mesh.newSphere(); },
+		"Cylinder" : function() { return Mesh.newCylinder(); },
+		"Cone" : function() { return Mesh.newCone(); },
+		"Cube" : function() { return Mesh.newCube(); },
+		"Plane (Surface)" : function() { return Mesh.newPlane(); }
+	});
+
+	dataModel.bindToGui();
+
+    dataModel.events.on("change", render);
+
+    render();
+
+	// TODO: it is a monster
+	$("#button-structure-load").on("click", function(e) {
+		$('#modal-load tbody').children().not('.tr-modal-load-table-first-row').empty();
+		$('#modal-load').modal();
+
+		$.get(
+			"library/"
+		).done(function(data, textStatus, jqXHR) {
+			if(jqXHR.status == 200) {
+				for(var name in data) {
+					var tr = $('<tr></tr>');
+					var aName = $('<a href="#"></a>').text(name);
+					aName.on("click", function(e) {
+						$('#modal-load tbody').children().not('.tr-modal-load-table-first-row').empty();
+						$.get(
+							"library/" + encodeURIComponent(e.target.textContent)
+						).done(function(data, textStatus, jqXHR) {
+							var mesh = Mesh.attach(data);
+							// TODO: code dup
+							dataModel.scene.model.meshes.push(mesh);
+							dataModel.selected = mesh;
+							dataModel.events.emit("change");
+							dataModel.applyToGui();
+
+							$('#modal-load').modal('hide')
+						}).fail(function(jqXHR, textStatus, errorThrown) {
+							$('#modal-load .alert-danger').text("Error getting library entry: " + textStatus + " (" + errorThrown + ")");
+							$('#modal-load .alert-danger').collapse('show');
+						});
+					});
+					var tdName = $('<td></td>').append(aName);
+					var tdDate = $('<td></td>').text(data[name].date.toString());
+					$('#modal-load tbody').append(tr.append(tdName).append(tdDate));
+				}
+				$('#modal-load .alert-danger').collapse('hide');
+			} else {
+				$('#modal-load .alert-danger').text("Error getting library listing: " + textStatus);
+				$('#modal-load .alert-danger').collapse('show');
+			}
+		}).fail(function(jqXHR, textStatus, errorThrown) {
+			$('#modal-load .alert-danger').text("Error getting library listing: " + textStatus + " (" + errorThrown + ")");
+			$('#modal-load .alert-danger').collapse('show');
+		});
+	});
+
+	// TODO: basic alert & prompt look unnatural here
+	$("#button-structure-save").on("click", function(e) {
+		var body = JSON.stringify(dataModel.selected);
+		var name = prompt("Enter library entry name", "");
+		$.ajax({
+			url: "library/" + encodeURIComponent(name),
+			method: "put",
+			contentType: "application/json",
+			data: body
+		}).done(function(data, textStatus, jqXHR) {
+			alert("done: " + textStatus);
+		}).fail(function(jqXHR, textStatus, errorThrown) {
+			alert("fail: " + textStatus + " (" + errorThrown + ")");
+		});
+	});
+
     $("#button-information").on("click", function(e) {
 		$('#modal-intro').modal();
 	});
@@ -85,19 +160,5 @@ window.onload = function() {
 		}
 	});
 
-	dataModel.setMeshGenerators({
-		"Sphere" : function() { return Mesh.newSphere(); },
-		"Cylinder" : function() { return Mesh.newCylinder(); },
-		"Cone" : function() { return Mesh.newCone(); },
-		"Cube" : function() { return Mesh.newCube(); },
-		"Plane (Surface)" : function() { return Mesh.newPlane(); }
-	});
-	
-	dataModel.bindToGui();
-
-    dataModel.events.on("change", render);
-    
-    render();
-    
     $('#modal-intro').modal();
 };

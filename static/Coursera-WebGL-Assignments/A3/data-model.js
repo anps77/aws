@@ -27,13 +27,13 @@ DataModel.prototype.setMeshGenerators = function(generators) {
         a.text(title);
         a.on("click", function() {
 			var mesh = generator();
-			
+
 			mesh.transformation = dataModel.scene.camera.transformation.multiply(dataModel.newObjectTransformFromCamera);
-			
+
 			var c = Color.newRandom();
 			mesh.material.faceColor = new Color(c.r, c.g, c.b, 1.0);
 			mesh.material.edgeColor = new Color(c.r*0.5, c.g*0.5, c.b*0.5, 1.0);
-			
+
 			dataModel.scene.model.meshes.push(mesh);
 			dataModel.selected = mesh;
 			dataModel.events.emit("change");
@@ -44,19 +44,22 @@ DataModel.prototype.setMeshGenerators = function(generators) {
         ulAddObject.append(li);
 	};
 
+    var prevChildren = ulAddObject.children();
+    prevChildren.detach();
 	for(var title in generators) {
 		addElement(title, generators[title]);
 	}
+    ulAddObject.append(prevChildren);
 }
 
 DataModel.prototype.bindToGui = function() {
 	var dataModel = this;
-	
+
 	var reloadData = function(e) { dataModel.loadFromGui(e.target); }
     $(".data-model-container input").on("change", reloadData);
     $(".colorpicker-component").on("changeColor.colorpicker", reloadData);
     $(".data-model-container select").on("change", reloadData);
-    
+
     $("#button-structure-remove-object").on("click", function() {
 		var meshes = dataModel.scene.model.meshes;
 		var index = meshes.indexOf(dataModel.selected);
@@ -79,14 +82,14 @@ DataModel.prototype.bindToGui = function() {
 		dataModel.applyToGui();
 		dataModel.events.emit("change");
 	});
-	
+
 	$('#button-structure-boolean-union-all').on("click", function() {
 		dataModel.scene.model.meshes = [ Mesh.newUnion(dataModel.scene.model.meshes) ];
 		dataModel.selected = dataModel.scene.model.meshes[0];
 		dataModel.applyToGui();
 		dataModel.events.emit("change");
 	});
-	
+
 	var bindTransformationButton = function(suffix, generator) {
 		$("#button-transformation-" + suffix).on("click", function() {
 			dataModel.selected.transformation.multiplyAssign(generator());
@@ -118,13 +121,13 @@ DataModel.prototype.bindToGui = function() {
 		dataModel.events.emit("change");
 		return;
 	});
-	
+
 	$('#button-transformation-to-camera').on("click", function() {
 		dataModel.selected.transformation = dataModel.scene.camera.transformation.multiply(dataModel.newObjectTransformFromCamera);
 		dataModel.events.emit("change");
 		return;
 	});
-	
+
     dataModel.applyToGui();
 };
 
@@ -140,7 +143,7 @@ DataModel.prototype.loadFromGui = function(src) {
 		this.applyToGui();
 		return;
 	}
-	
+
     if(this.selected instanceof Camera) {
 		// nothing
 	} else {
@@ -148,7 +151,7 @@ DataModel.prototype.loadFromGui = function(src) {
 		this.selected.material.faceColor = this._loadFromGuiColor("input-material-face-color");
 		this.selected.material.edgeColor = this._loadFromGuiColor("input-material-edge-color");
 	}
-	
+
     this.transformation.translateAmount = +$("#input-transformation-translate-amount").val();
     this.transformation.rotateAmount = +$("#input-transformation-rotate-amount").val();
     this.transformation.scaleAmount = +$("#input-transformation-scale-amount").val();
@@ -189,15 +192,15 @@ DataModel.prototype._applyToGuiColor = function(id, c) {
 
 DataModel.prototype.applyToGui = function() {
     this._applyToGuiModelObjects();
-   
+
     if(this.selected instanceof Camera) {
 		$('#input-structure-active-object-name').val("(Camera)");
 		$('#input-structure-active-object-name').prop('disabled', true);
-		
+
 		$('#button-structure-remove-object').prop('disabled', true);
 
 		$('#button-structure-save').prop('disabled', true);
-		
+
 		$('#button-transformation-scale-xp').prop('disabled', true);
 		$('#button-transformation-scale-xn').prop('disabled', true);
 		$('#button-transformation-scale-yp').prop('disabled', true);
@@ -215,11 +218,11 @@ DataModel.prototype.applyToGui = function() {
 	} else {
 		$('#input-structure-active-object-name').val(this.selected.name);
 		$('#input-structure-active-object-name').prop('disabled', false);
-		
+
 		$('#button-structure-remove-object').prop('disabled', false);
 
 		$('#button-structure-save').prop('disabled', false);
-		
+
 		$('#button-transformation-scale-xp').prop('disabled', false);
 		$('#button-transformation-scale-xn').prop('disabled', false);
 		$('#button-transformation-scale-yp').prop('disabled', false);
@@ -235,12 +238,11 @@ DataModel.prototype.applyToGui = function() {
 		this._applyToGuiColor("input-material-edge-color", this.selected.material.edgeColor);
 		$('#input-material-edge-color').colorpicker('enable');
 	}
-    
+
 	$('#button-structure-remove-all-objects').prop('disabled', this.scene.model.meshes.length > 0 ? false : true);
 	$('#button-structure-boolean-union-all').prop('disabled', this.scene.model.meshes.length > 0 ? false : true);
-	
+
     $("#input-transformation-translate-amount").val(this.transformation.translateAmount);
     $("#input-transformation-rotate-amount").val(this.transformation.rotateAmount);
     $("#input-transformation-scale-amount").val(this.transformation.scaleAmount);
 };
-

@@ -31,4 +31,9 @@
 
 .input-group-sm>.input-group-btn>.btn {
 	padding: 5px 5px;
-}}
+}
+
+#modal-load .table-responsive {
+	overflow: scroll;
+	height: 300px;
+}

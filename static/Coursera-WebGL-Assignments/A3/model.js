@@ -11,9 +11,19 @@ Color.newRandom = function() {
 	return new Color(Math.random(), Math.random(), Math.random(), Math.random());
 }
 
+Color.attach = function(data) {
+	data.__proto__ = Color.prototype;
+}
+
 function Material() {
 	this.faceColor = new Color();
 	this.edgeColor = new Color();
+}
+
+Material.attach = function(data) {
+	data.__proto__ = Material.prototype;
+	Color.attach(data.faceColor);
+	Color.attach(data.edgeColor);
 }
 
 function Mesh() {
@@ -24,14 +34,36 @@ function Mesh() {
 	this.name = "unnamed";
 }
 
+Mesh.attach = function(data) {
+	data.__proto__ = Mesh.prototype;
+	for(var i = 0; i < data.vertices.length; ++i) {
+		Mesh.Vertex.attach(data.vertices[i]);
+	}
+	for(var i = 0; i < data.facets.length; ++i) {
+		Mesh.Facet.attach(data.facets[i]);
+	}
+	Transformation.attach(data.transformation);
+	Material.attach(data.material);
+	return data;
+}
+
 Mesh.Vertex = function(position) {
 	this.position = position;
+}
+
+Mesh.Vertex.attach = function(data) {
+	data.__proto__ = Mesh.Vertex.prototype;
+	Point.attach(data.position);
 }
 
 Mesh.Facet = function(vi1, vi2, vi3) {
 	this.vi1 = vi1;
 	this.vi2 = vi2;
 	this.vi3 = vi3;
+}
+
+Mesh.Facet.attach = function(data) {
+	data.__proto__ = Mesh.Facet.prototype;
 }
 
 Mesh.newSphere = function(origin, radius, stacks, slices) {
@@ -73,7 +105,7 @@ Mesh.newSphere = function(origin, radius, stacks, slices) {
 			}
 		}
 	}
-	
+
 	mesh.name = "Sphere";
 	return mesh;
 }
@@ -85,11 +117,11 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 	vx = vx || new Vector(1.0, 0.0, 0.0);
 	nz = nz || 1;
 	nr = nr || 16;
-	
+
 	var vy = vz.cross(vx).getNormalized();
 	vx = vy.cross(vz).getNormalized();
 	var mesh = new Mesh();
-	
+
 	// XXX: points at 0 and pi*2 are multiplied on intent. It will be
 	// required for proper texturing
 	for(var z = 0; z <= nz; ++z) {
@@ -99,7 +131,7 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec)));
 		}
 	}
-	
+
 	for(var z = 0; z < nz; ++z) {
 		for(var r = 0; r < nr; ++r) {
 			var v00 = (z + 0) * (nr + 1) + (r + 0);
@@ -125,7 +157,7 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 		var v11 = mesh.vertices.length - 1;
 		mesh.facets.push(new Mesh.Facet(v00, v01, v11));
 	}
-	
+
 	mesh.name = "Cylinder";
 	return mesh;
 }
@@ -137,11 +169,11 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 	vx = vx || new Vector(1.0, 0.0, 0.0);
 	nz = nz || 1;
 	nr = nr || 16;
-	
+
 	var vy = vz.cross(vx).getNormalized();
 	vx = vy.cross(vz).getNormalized();
 	var mesh = new Mesh();
-	
+
 	// XXX: points at 0 and pi*2 are multiplied on intent. It will be
 	// required for proper texturing
 	// XXX: points and faces at head of cylinder probably might be optimized
@@ -153,7 +185,7 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec)));
 		}
 	}
-	
+
 	for(var z = 0; z < nz; ++z) {
 		for(var r = 0; r < nr; ++r) {
 			var v00 = (z + 0) * (nr + 1) + (r + 0);
@@ -172,7 +204,7 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 		var v11 = (r + 1);
 		mesh.facets.push(new Mesh.Facet(v00, v11, v10));
 	}
-	
+
 	mesh.name = "Cone";
 	return mesh;
 }
@@ -183,7 +215,7 @@ Mesh.newPlane = function(origin, vx, vy, nx, ny) {
 	vy = vy || new Vector(0.0, 1.0, 0.0);
 	nx = nx || 1;
 	ny = ny || 1;
-	
+
 	var mesh = new Mesh();
 	for(var x = 0; x <= nx; ++x) {
 		for(var y = 0; y <= ny; ++y) {
@@ -200,7 +232,7 @@ Mesh.newPlane = function(origin, vx, vy, nx, ny) {
 			mesh.facets.push(new Mesh.Facet(v00, v10, v11));
 		}
 	}
-	
+
 	mesh.name = "Plane";
 	return mesh;
 }
@@ -210,7 +242,7 @@ Mesh.newCube = function(origin, vx, vy, vz) {
 	vx = vx || new Vector(1.0, 0.0, 0.0);
 	vy = vy || new Vector(0.0, 1.0, 0.0);
 	vz = vz || new Vector(0.0, 0.0, 1.0);
-	
+
 	var mesh = new Mesh();
 
 	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(0)).add(vy.multiply(0)).add(vz.multiply(0))));
@@ -234,7 +266,7 @@ Mesh.newCube = function(origin, vx, vy, vz) {
 	mesh.facets.push(new Mesh.Facet(3, 7, 6));
 	mesh.facets.push(new Mesh.Facet(0, 4, 1));
 	mesh.facets.push(new Mesh.Facet(1, 4, 5));
-	
+
 	mesh.name = "Cube";
 	return mesh;
 }
@@ -260,4 +292,3 @@ Mesh.newUnion = function(operands) {
 function Model() {
     this.meshes = [];
 }
-
