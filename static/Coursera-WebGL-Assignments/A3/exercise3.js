@@ -74,6 +74,17 @@ window.onload = function() {
 		}
 	});
 	
+    $("#button-information").on("click", function(e) {
+		$('#modal-intro').modal();
+	});
+
+    $("#gl-canvas").on("keydown", function(e) {
+		if(112 /* F1 */ == e.keyCode) {
+			$("#button-information").click();
+			e.preventDefault();
+		}
+	});
+
 	dataModel.setMeshGenerators({
 		"Sphere" : function() { return Mesh.newSphere(); },
 		"Cylinder" : function() { return Mesh.newCylinder(); },
@@ -85,6 +96,8 @@ window.onload = function() {
 	dataModel.bindToGui();
 
     dataModel.events.on("change", render);
-
+    
     render();
+    
+    $('#modal-intro').modal();
 };
