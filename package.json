@@ -16,6 +16,8 @@
     "url": "https://github.com/anps77/aws/issues"
   },
   "dependencies": {
-    "express": "~4.13.3"
+    "express": "~4.13.3",
+    "consolidate": "~0.13.1",
+    "swig": "~1.4.2"
   }
 }
