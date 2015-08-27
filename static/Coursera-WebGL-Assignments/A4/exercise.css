@@ -18,7 +18,7 @@
 }
 
 .navbar-default {
-	background: rgba(255,255,255,0.5);
+	background: rgba(255,255,255,0.8);
 }
 
 .list-group-item {
@@ -36,4 +36,26 @@
 #modal-load .table-responsive {
 	overflow: scroll;
 	height: 300px;
+}
+
+@keyframes hightlight-grow {
+	0% {
+		transform: scale(2);
+		filter: invert(100%);
+		-webkit-filter: invert(100%);
+	}
+	50% {
+		transform: scale(1);
+		filter: invert(0%);
+		-webkit-filter: invert(0%);
+	}
+	100% {
+		transform: scale(2);
+		filter: invert(100%);
+		-webkit-filter: invert(100%);
+	}
+}
+
+.demo-highlight {
+	animation:hightlight-grow 1s infinite;
 }

@@ -16,14 +16,19 @@ Color.attach = function(data) {
 }
 
 function Material() {
-	this.faceColor = new Color();
-	this.edgeColor = new Color();
+	this.ambientColor = new Color();
+	this.specularColor = new Color();
+	this.diffuseColor = new Color();
+	this.edgeDiffuseColor = new Color();
+	this.specularExponent = 0.0;
 }
 
 Material.attach = function(data) {
 	data.__proto__ = Material.prototype;
-	Color.attach(data.faceColor);
-	Color.attach(data.edgeColor);
+	Color.attach(data.ambientColor);
+	Color.attach(data.specularColor);
+	Color.attach(data.diffuseColor);
+	Color.attach(data.edgeDiffuseColor);
 }
 
 function Mesh() {
@@ -47,13 +52,15 @@ Mesh.attach = function(data) {
 	return data;
 }
 
-Mesh.Vertex = function(position) {
+Mesh.Vertex = function(position, normal) {
 	this.position = position;
+	this.normal = normal;
 }
 
 Mesh.Vertex.attach = function(data) {
 	data.__proto__ = Mesh.Vertex.prototype;
 	Point.attach(data.position);
+	Vector.attach(data.normal);
 }
 
 Mesh.Facet = function(vi1, vi2, vi3) {
@@ -69,8 +76,8 @@ Mesh.Facet.attach = function(data) {
 Mesh.newSphere = function(origin, radius, stacks, slices) {
 	origin = origin || new Point(new Vector(0.0, 0.0, 0.0));
 	radius = radius || 1.0;
-	stacks = stacks || 16;
-	slices = slices || 16;
+	stacks = stacks || 32;
+	slices = slices || 32;
 
 	function newSphereVertex(x, y, z, nx, ny, nz, phi, theta, tx, ty, tz) {
 		var s = 2.0, t = 1.0;
@@ -78,7 +85,7 @@ Mesh.newSphere = function(origin, radius, stacks, slices) {
 		var two_pi = 2.0 * pi;
 		//          position           normal              material  tex st                                  tangent
 		//return{ { x, y, z, 1.0f }, { nx, ny, nz, 0.0f }, material, { s * phi / two_pi, t * theta / pi }, { tx, ty, tz, 0.0f } };
-		return new Mesh.Vertex(origin.add(new Vector(x, y, z)));
+		return new Mesh.Vertex(origin.add(new Vector(x, y, z)), new Vector(nx, ny, nz));
 	}
 
 	var mesh = new Mesh();
@@ -116,10 +123,12 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 	vz = vz || new Vector(0.0, 0.0, 1.0);
 	vx = vx || new Vector(1.0, 0.0, 0.0);
 	nz = nz || 1;
-	nr = nr || 16;
+	nr = nr || 32;
 
 	var vy = vz.cross(vx).getNormalized();
 	vx = vy.cross(vz).getNormalized();
+	var vzn = vz.getNormalized();
+
 	var mesh = new Mesh();
 
 	// XXX: points at 0 and pi*2 are multiplied on intent. It will be
@@ -127,8 +136,8 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 	for(var z = 0; z <= nz; ++z) {
 		for(var r = 0; r <= nr; ++r) {
 			var phi = 2.0 * Math.PI * r / nr;
-			var rvec = vx.multiply(radius * Math.cos(phi)).add(vy.multiply(radius * Math.sin(phi)));
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec)));
+			var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(radius)), rvec));
 		}
 	}
 
@@ -143,19 +152,32 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 		}
 	}
 
-	mesh.vertices.push(new Mesh.Vertex(origin));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz))));
-	for(var r = 0; r < nr; ++r) {
-		var v00 = mesh.vertices.length - 2;
-		var v10 = (r + 0);
-		var v11 = (r + 1);
-		mesh.facets.push(new Mesh.Facet(v00, v11, v10));
+  // XXX: proper normals on caps require separate vertex copies for them
+	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1)));
+	var bottomCenter = mesh.vertices.length - 1;
+	for(var r = 0; r <= nr; ++r) {
+		var phi = 2.0 * Math.PI * r / nr;
+		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1)));
 	}
 	for(var r = 0; r < nr; ++r) {
-		var v00 = (nz + 0) * (nr + 1) + (r + 0);
-		var v01 = (nz + 0) * (nr + 1) + (r + 1);
-		var v11 = mesh.vertices.length - 1;
-		mesh.facets.push(new Mesh.Facet(v00, v01, v11));
+		var v0 = bottomCenter + r + 1;
+		var v1 = bottomCenter;
+		var v2 = bottomCenter + r + 2;
+		mesh.facets.push(new Mesh.Facet(v0, v1, v2));
+	}
+	mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)), vzn));
+	var topCenter = mesh.vertices.length - 1;
+	for(var r = 0; r <= nr; ++r) {
+		var phi = 2.0 * Math.PI * r / nr;
+		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)).add(rvec.multiply(radius)), vzn));
+	}
+	for(var r = 0; r < nr; ++r) {
+		var v0 = topCenter;
+		var v1 = topCenter + r + 1;
+		var v2 = topCenter + r + 2;
+		mesh.facets.push(new Mesh.Facet(v0, v1, v2));
 	}
 
 	mesh.name = "Cylinder";
@@ -168,10 +190,21 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 	vz = vz || new Vector(0.0, 0.0, 1.0);
 	vx = vx || new Vector(1.0, 0.0, 0.0);
 	nz = nz || 1;
-	nr = nr || 16;
+	nr = nr || 32;
+
+  // XXX HACK: cone's head is a singular point of normals.
+	// As a result the nearest layer of triangles always looks half-flat-shaded.
+	// To minimize visible effect we do not let this layer be the only one.
+	// TODO: if somebody knows a proper solution for this issue, please let me know :)
+	if(nz == 1) {
+		nz = 4;
+		vz = vz.multiply(0.25);
+	}
 
 	var vy = vz.cross(vx).getNormalized();
 	vx = vy.cross(vz).getNormalized();
+	var vzn = vz.getNormalized();
+
 	var mesh = new Mesh();
 
 	// XXX: points at 0 and pi*2 are multiplied on intent. It will be
@@ -181,8 +214,8 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 		var k = (nz - z) / nz;
 		for(var r = 0; r <= nr; ++r) {
 			var phi = 2.0 * Math.PI * r / nr;
-			var rvec = vx.multiply(k * radius * Math.cos(phi)).add(vy.multiply(k * radius * Math.sin(phi)));
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec)));
+			var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(k * radius)), rvec));
 		}
 	}
 
@@ -197,12 +230,19 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 		}
 	}
 
-	mesh.vertices.push(new Mesh.Vertex(origin));
+	// XXX: proper normals on cap require separate vertex copies for them
+	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1)));
+	var bottomCenter = mesh.vertices.length - 1;
+	for(var r = 0; r <= nr; ++r) {
+		var phi = 2.0 * Math.PI * r / nr;
+		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1)));
+	}
 	for(var r = 0; r < nr; ++r) {
-		var v00 = mesh.vertices.length - 1;
-		var v10 = (r + 0);
-		var v11 = (r + 1);
-		mesh.facets.push(new Mesh.Facet(v00, v11, v10));
+		var v0 = bottomCenter + r + 1;
+		var v1 = bottomCenter;
+		var v2 = bottomCenter + r + 2;
+		mesh.facets.push(new Mesh.Facet(v0, v1, v2));
 	}
 
 	mesh.name = "Cone";
@@ -215,11 +255,12 @@ Mesh.newPlane = function(origin, vx, vy, nx, ny) {
 	vy = vy || new Vector(0.0, 1.0, 0.0);
 	nx = nx || 1;
 	ny = ny || 1;
+	var vz = vx.cross(vy).getNormalized();
 
 	var mesh = new Mesh();
 	for(var x = 0; x <= nx; ++x) {
 		for(var y = 0; y <= ny; ++y) {
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(x)).add(vy.multiply(y))));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(x)).add(vy.multiply(y)), vz));
 		}
 	}
 	for(var x = 0; x < nx; ++x) {
@@ -245,27 +286,23 @@ Mesh.newCube = function(origin, vx, vy, vz) {
 
 	var mesh = new Mesh();
 
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(0)).add(vy.multiply(0)).add(vz.multiply(0))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(0)).add(vy.multiply(0)).add(vz.multiply(1))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(0)).add(vy.multiply(1)).add(vz.multiply(0))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(0)).add(vy.multiply(1)).add(vz.multiply(1))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(1)).add(vy.multiply(0)).add(vz.multiply(0))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(1)).add(vy.multiply(0)).add(vz.multiply(1))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(1)).add(vy.multiply(1)).add(vz.multiply(0))));
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(1)).add(vy.multiply(1)).add(vz.multiply(1))));
-
-	mesh.facets.push(new Mesh.Facet(0, 1, 3));
-	mesh.facets.push(new Mesh.Facet(0, 3, 2));
-	mesh.facets.push(new Mesh.Facet(1, 7, 3));
-	mesh.facets.push(new Mesh.Facet(1, 5, 7));
-	mesh.facets.push(new Mesh.Facet(5, 6, 7));
-	mesh.facets.push(new Mesh.Facet(5, 4, 6));
-	mesh.facets.push(new Mesh.Facet(4, 2, 6));
-	mesh.facets.push(new Mesh.Facet(4, 0, 2));
-	mesh.facets.push(new Mesh.Facet(3, 6, 2));
-	mesh.facets.push(new Mesh.Facet(3, 7, 6));
-	mesh.facets.push(new Mesh.Facet(0, 4, 1));
-	mesh.facets.push(new Mesh.Facet(1, 4, 5));
+  function side(o,a,b) {
+		var l = mesh.vertices.length;
+		var n = b.cross(a).getNormalized();
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(0)), n));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(1)), n));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(0)), n));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(1)), n));
+		mesh.facets.push(new Mesh.Facet(l + 0, l + 1, l + 3));
+		mesh.facets.push(new Mesh.Facet(l + 0, l + 3, l + 2));
+	}
+	side(origin, vx, vy);
+	side(origin, vy, vz);
+	side(origin, vz, vx);
+	var origin2 = origin.add(vx).add(vy).add(vz);
+	side(origin2, vy.multiply(-1), vx.multiply(-1));
+	side(origin2, vz.multiply(-1), vy.multiply(-1));
+	side(origin2, vx.multiply(-1), vz.multiply(-1));
 
 	mesh.name = "Cube";
 	return mesh;
@@ -279,7 +316,7 @@ Mesh.newUnion = function(operands) {
 	for(var i = 0; i < operands.length; ++i) {
 		var op = operands[i];
 		for(var j = 0; j < op.vertices.length; ++j) {
-			mesh.vertices.push(new Mesh.Vertex(op.transformation.multiply(op.vertices[j].position)));
+			mesh.vertices.push(new Mesh.Vertex(op.transformation.multiply(op.vertices[j].position), op.transformation.multiply(op.vertices[j].normal)));
 		}
 		for(var j = 0; j < op.facets.length; ++j) {
 			mesh.facets.push(new Mesh.Facet(op.facets[j].vi1 + vertexIndexOffset, op.facets[j].vi2 + vertexIndexOffset, op.facets[j].vi3 + vertexIndexOffset));

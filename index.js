@@ -170,5 +170,5 @@ mongoClient.connect('mongodb://localhost:27017/webgl-ex3', function(err, db) {
         );
     });
 
-    app.listen(8080);
+    app.listen(80);
 });

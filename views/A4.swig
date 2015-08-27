@@ -39,7 +39,26 @@
 
 <div class="container-fluid">
     <div class="col-md-4 col-md-offset-8 col-lg-3 col-lg-offset-9 data-model-container data-statistics-container">
-        <div class="panel panel-default">
+      <div class="panel panel-default">
+          <div class="panel-heading">
+              <h3 class="panel-title">
+                  <a data-toggle="collapse" href="#panel-help">
+                      Help
+                  </a>
+              </h3>
+          </div>
+          <div id="panel-help" class="panel-collapse collapse in">
+              <ul class="list-group">
+                  <li class="list-group-item">
+                    <div class="btn-group btn-group-justified btn-group-sm">
+                      <div class="btn-group btn-group-sm"><button class="btn btn-primary" type="button" id="button-demo">Demo!</button></div>
+                      <div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-information">Information</button></div>
+        						</div>
+                  </li>
+              </ul>
+          </div>
+      </div>
+          <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">
                     <a data-toggle="collapse" href="#panel-structure">
@@ -56,6 +75,7 @@
 								<optgroup label="Scene objects">
 									<option id="option-structure-active-object-camera">Camera</option>
 								</optgroup>
+                <optgroup label="Lights" id="optgroup-structure-active-object-lights"></optgroup>
 								<optgroup label="Model objects" id="optgroup-structure-active-object-model-objects"></optgroup>
                             </select>
                         </div>
@@ -76,6 +96,8 @@
 								<ul id="ul-structure-add-object" class="dropdown-menu" aria-labelledby="button-structure-add-object">
                                     <li role="separator" class="divider"></li>
                                     <li><a href="#" id="button-structure-load">Load from library...</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" id="button-structure-add-light">Light Source</a></li>
 								</ul>
                             </div>
                             <div class="btn-group btn-group-sm"><button class="btn btn-default" type="button" id="button-structure-remove-object">Remove</button></div>
@@ -156,26 +178,57 @@
             <div class="panel-heading">
                 <h3 class="panel-title">
                     <a data-toggle="collapse" href="#panel-material">
-                        Material
+                        Material and Light
                     </a>
                 </h3>
             </div>
             <div id="panel-material" class="panel-collapse collapse in">
                 <ul class="list-group">
-                    <li class="list-group-item">
-                        <div id="input-material-face-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
-                            <span class="input-group-addon">Face Color:</span>
-                            <input type="text" value="" class="form-control">
-                            <span class="input-group-addon"><i></i></span>
-                        </div>
-                    </li>
-                    <li class="list-group-item">
-                        <div id="input-material-edge-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
-                            <span class="input-group-addon">Edge Color:</span>
-                            <input type="text" value="" class="form-control">
-                            <span class="input-group-addon"><i></i></span>
-                        </div>
-                    </li>
+                  <li class="list-group-item">
+                      <div id="input-material-diffuse-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
+                          <span class="input-group-addon">Diffuse Color:</span>
+                          <input type="text" value="" class="form-control">
+                          <span class="input-group-addon"><i></i></span>
+                      </div>
+                  </li>
+                  <li class="list-group-item">
+                      <div id="input-material-ambient-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
+                          <span class="input-group-addon">Ambient Color:</span>
+                          <input type="text" value="" class="form-control">
+                          <span class="input-group-addon"><i></i></span>
+                      </div>
+                  </li>
+                  <li class="list-group-item">
+                      <div id="input-material-specular-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
+                          <span class="input-group-addon">Specular Color:</span>
+                          <input type="text" value="" class="form-control">
+                          <span class="input-group-addon"><i></i></span>
+                      </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-addon">Specular Exponent:</span>
+                      <input id="input-material-specular-exponent" type="number" class="form-control" min="1" max="10000" value="5" step="50" />
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div id="input-material-edge-diffuse-color" class="input-group input-group-sm colorpicker-component colorpicker-element">
+                      <span class="input-group-addon">Edge Diffuse Color:</span>
+                      <input type="text" value="" class="form-control">
+                      <span class="input-group-addon"><i></i></span>
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-addon">Att:</span>
+                      <input id="input-light-attenuation-ac0" type="number" class="form-control" min="1.0" max="100.0" value="1.0" step="1.0" />
+                      <span class="input-group-addon">+</span>
+                      <input id="input-light-attenuation-ac1" type="number" class="form-control" min="0.0" max="100.0" value="0.0" step="1.0" />
+                      <span class="input-group-addon">d +</span>
+                      <input id="input-light-attenuation-ac2" type="number" class="form-control" min="0.0" max="100.0" value="0.0" step="1.0" />
+                      <span class="input-group-addon">d<sup>2</sup></span>
+                    </div>
+                  </li>
                 </ul>
             </div>
         </div>
@@ -191,7 +244,6 @@
                 <ul class="list-group">
                     <li class="list-group-item">Triangle count: <span class="badge" id="text-statistics-triangle-count"></span></li>
                     <li class="list-group-item">Render time: <span class="badge" id="text-statistics-render-time"></span></li>
-                    <li class="list-group-item"><button class="btn btn-default" type="button" id="button-information">Information</button></li>
                 </ul>
             </div>
         </div>
@@ -268,40 +320,108 @@
 <script src="exercise.js"></script>
 
 <script id="vertex-shader-meshes" type="x-shader/x-vertex">
+precision mediump float;
+
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+uniform vec4 specularColor;
+uniform vec4 ambientColor;
+uniform vec4 diffuseColor;
+uniform vec4 edgeDiffuseColor;
+uniform float specularExponent;
+
 attribute vec4 vPosition;
 attribute vec3 vBarycentric;
-varying vec4 fColor;
+attribute vec4 vNormal;
+
 varying vec3 fBarycentric;
+varying vec4 fPositionEye;
+varying vec4 fNormalEye;
+varying vec4 fSpecularColor;
+varying vec4 fAmbientColor;
+varying vec4 fDiffuseColor;
+varying vec4 fEdgeDiffuseColor;
+varying float fSpecularExponent;
 
 void main()
 {
-    fColor = vec4(1.0, 0.0, 1.0, 1.0);
     fBarycentric = vBarycentric;
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vPosition;
+    fPositionEye = viewMatrix * modelMatrix * vec4(vPosition.xyz, 1.0);
+    fNormalEye = viewMatrix * modelMatrix * vec4(vNormal.xyz, 0.0);
+    fSpecularColor = specularColor;
+    fAmbientColor = ambientColor;
+    fDiffuseColor = diffuseColor;
+    fEdgeDiffuseColor = edgeDiffuseColor;
+    fSpecularExponent = specularExponent;
+    gl_Position = projectionMatrix * fPositionEye;
 }
 </script>
 
 <script id="fragment-shader-meshes" type="x-shader/x-fragment">
+#extension GL_OES_standard_derivatives : enable
+
 precision mediump float;
 
-uniform vec4 faceColor;
-uniform vec4 edgeColor;
+#define LIGHT_COUNT 8
 
-varying vec4 fColor;
+uniform mat4 viewMatrix;
+uniform vec4 lightPosition[LIGHT_COUNT];
+uniform vec4 lightSpecularColor[LIGHT_COUNT];
+uniform vec4 lightAmbientColor[LIGHT_COUNT];
+uniform vec4 lightDiffuseColor[LIGHT_COUNT];
+uniform float lightAc0[LIGHT_COUNT];
+uniform float lightAc1[LIGHT_COUNT];
+uniform float lightAc2[LIGHT_COUNT];
+uniform int lightCount;
+
 varying vec3 fBarycentric;
+varying vec4 fPositionEye;
+varying vec4 fNormalEye;
+varying vec4 fSpecularColor;
+varying vec4 fAmbientColor;
+varying vec4 fDiffuseColor;
+varying vec4 fEdgeDiffuseColor;
+varying float fSpecularExponent;
 
-#extension GL_OES_standard_derivatives : enable
 float edgeFactor() {
 	vec3 d = fwidth(fBarycentric);
 	vec3 a3 = smoothstep(vec3(0.0), d*0.95, fBarycentric);
 	return min(min(a3.x, a3.y), a3.z);
 }
 
-void main(){
-	gl_FragColor = mix(edgeColor, faceColor, edgeFactor());
+vec4 lDiffuseColor;
+
+vec4 phong() {
+  // TODO: these values are light-independent. It is possible to compute them once
+  vec4 fromEye = normalize(fPositionEye - vec4(0.0, 0.0, 0.0, 1.0));
+  vec4 toEye = -fromEye;
+  vec4 normalEye = normalize(fNormalEye);
+
+  vec4 res = vec4(0.0, 0.0, 0.0, 0.0);
+  for(int i = 0; i < LIGHT_COUNT; ++i) {
+    if(i < lightCount) {
+      vec4 lightPositionEye = viewMatrix * lightPosition[i];
+      vec4 lightToPointEye = fPositionEye - lightPositionEye;
+      vec4 lightDirectionEye = normalize(lightToPointEye);
+      float lightDiffuseAmount = max(0.0, dot(normalEye, -lightDirectionEye));
+      vec4 lightReflectionEye = reflect(lightDirectionEye, normalEye);
+      float lightSpecularAmount = max(0.0, dot(toEye, lightReflectionEye));
+      float d = length(lightToPointEye);
+      float attenuation = lightAc0[i] + lightAc1[i] * d + lightAc2[i] * d * d;
+      vec4 add = lightAmbientColor[i] * fAmbientColor
+               + lightDiffuseColor[i] * lDiffuseColor * lightDiffuseAmount
+               + lightSpecularColor[i] * fSpecularColor * pow(lightSpecularAmount, fSpecularExponent);
+      res += add / attenuation;
+    }
+   }
+   return res;
+}
+
+void main() {
+  float f = edgeFactor();
+  lDiffuseColor = mix(fEdgeDiffuseColor, fDiffuseColor, f);
+  gl_FragColor = phong();
 }
 
 </script>
