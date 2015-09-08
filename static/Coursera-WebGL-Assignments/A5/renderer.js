@@ -24,7 +24,7 @@ Renderer.prototype.onresize = function(canvas) {
 
 Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
   var FLOAT32_SIZE = 4;
-  var FLOATS_PER_VERTEX = 9;
+  var FLOATS_PER_VERTEX = 11;
   var INDICES_PER_FACET = 3;
 
   function flattenAll( m ) {
@@ -40,6 +40,8 @@ Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
 			floatArray[index++] = 1;
 			floatArray[index++] = 0;
 			floatArray[index++] = 0;
+      floatArray[index++] = m.vertices[m.facets[i].vi1].tex.radiusVector.x;
+			floatArray[index++] = m.vertices[m.facets[i].vi1].tex.radiusVector.y;
 			floatArray[index++] = m.vertices[m.facets[i].vi2].position.radiusVector.x;
 			floatArray[index++] = m.vertices[m.facets[i].vi2].position.radiusVector.y;
 			floatArray[index++] = m.vertices[m.facets[i].vi2].position.radiusVector.z;
@@ -49,6 +51,8 @@ Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
 			floatArray[index++] = 0;
 			floatArray[index++] = 1;
 			floatArray[index++] = 0;
+      floatArray[index++] = m.vertices[m.facets[i].vi2].tex.radiusVector.x;
+			floatArray[index++] = m.vertices[m.facets[i].vi2].tex.radiusVector.y;
 			floatArray[index++] = m.vertices[m.facets[i].vi3].position.radiusVector.x;
 			floatArray[index++] = m.vertices[m.facets[i].vi3].position.radiusVector.y;
 			floatArray[index++] = m.vertices[m.facets[i].vi3].position.radiusVector.z;
@@ -58,6 +62,8 @@ Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
 			floatArray[index++] = 0;
 			floatArray[index++] = 0;
 			floatArray[index++] = 1;
+      floatArray[index++] = m.vertices[m.facets[i].vi3].tex.radiusVector.x;
+			floatArray[index++] = m.vertices[m.facets[i].vi3].tex.radiusVector.y;
     }
 
     return floatArray;
@@ -102,6 +108,8 @@ Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
 			this.gl.enableVertexAttribArray( this.gl.getAttribLocation( this.programMeshes, "vNormal" ) );
 			this.gl.vertexAttribPointer( this.gl.getAttribLocation( this.programMeshes, "vBarycentric" ), 3, this.gl.FLOAT, false, FLOAT32_SIZE * FLOATS_PER_VERTEX, FLOAT32_SIZE * 6 );
 			this.gl.enableVertexAttribArray( this.gl.getAttribLocation( this.programMeshes, "vBarycentric" ) );
+      this.gl.vertexAttribPointer( this.gl.getAttribLocation( this.programMeshes, "vTex" ), 2, this.gl.FLOAT, false, FLOAT32_SIZE * FLOATS_PER_VERTEX, FLOAT32_SIZE * 9 );
+			this.gl.enableVertexAttribArray( this.gl.getAttribLocation( this.programMeshes, "vTex" ) );
 
       this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.programMeshes, "modelMatrix"), false, flattenTransformation(mesh.transformation));
       this.gl.uniformMatrix4fv(this.gl.getUniformLocation(this.programMeshes, "viewMatrix"), false, flattenTransformation(dataModel.scene.camera.transformation.getInvertionForRigid()));
@@ -136,6 +144,15 @@ Renderer.prototype._renderMeshes = function(dataModel, dataStatistics) {
         }
       }
       this.gl.uniform1i(this.gl.getUniformLocation(this.programMeshes, "lightCount"), lightIndex);
+
+      // TODO: such usage of textureObject attribute looks like a bad design
+      if(mesh.textureObject) {
+        mesh.textureObject.update(mesh.texture);
+      } else {
+        mesh.textureObject = new Texture(this.gl, mesh.texture, function() { dataModel.events.emit("change"); });
+      }
+      mesh.textureObject.preRender(this.programMeshes);
+      this.gl.uniform1f(this.gl.getUniformLocation(this.programMeshes, "textureMultiplier"), mesh.textureMultiplier);
 
 			this.gl.drawArrays( this.gl.TRIANGLES, 0, vertices.length / FLOATS_PER_VERTEX );
 

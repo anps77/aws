@@ -229,6 +229,18 @@
                       <span class="input-group-addon">d<sup>2</sup></span>
                     </div>
                   </li>
+                  <li class="list-group-item">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-addon">Texture:</span>
+                      <input id="input-material-texture" type="text" class="form-control" value="" />
+                    </div>
+                  </li>
+                  <li class="list-group-item">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-addon">Texture Multiplier:</span>
+                      <input id="input-material-texture-multiplier" type="numer" class="form-control" min="1" max="10" value="1" step="1" />
+                    </div>
+                  </li>
                 </ul>
             </div>
         </div>
@@ -314,6 +326,7 @@
 <script src="geometry.js"></script>
 <script src="data-model.js"></script>
 <script src="data-statistics.js"></script>
+<script src="texture.js"></script>
 <script src="model.js"></script>
 <script src="scene.js"></script>
 <script src="renderer.js"></script>
@@ -334,7 +347,9 @@ uniform float specularExponent;
 attribute vec4 vPosition;
 attribute vec3 vBarycentric;
 attribute vec4 vNormal;
+attribute vec2 vTex;
 
+varying vec2 fTex;
 varying vec3 fBarycentric;
 varying vec4 fPositionEye;
 varying vec4 fNormalEye;
@@ -346,6 +361,7 @@ varying float fSpecularExponent;
 
 void main()
 {
+    fTex = vTex;
     fBarycentric = vBarycentric;
     fPositionEye = viewMatrix * modelMatrix * vec4(vPosition.xyz, 1.0);
     fNormalEye = viewMatrix * modelMatrix * vec4(vNormal.xyz, 0.0);
@@ -374,7 +390,11 @@ uniform float lightAc0[LIGHT_COUNT];
 uniform float lightAc1[LIGHT_COUNT];
 uniform float lightAc2[LIGHT_COUNT];
 uniform int lightCount;
+uniform sampler2D texture;
+uniform bool enableTexture;
+uniform float textureMultiplier;
 
+varying vec2 fTex;
 varying vec3 fBarycentric;
 varying vec4 fPositionEye;
 varying vec4 fNormalEye;
@@ -420,7 +440,13 @@ vec4 phong() {
 
 void main() {
   float f = edgeFactor();
-  lDiffuseColor = mix(fEdgeDiffuseColor, fDiffuseColor, f);
+  lDiffuseColor = fDiffuseColor;
+  if(enableTexture) {
+    lDiffuseColor = texture2D(texture, textureMultiplier * fTex);
+  }
+  if(!enableTexture) {
+    lDiffuseColor = mix(fEdgeDiffuseColor, lDiffuseColor, f);
+  }
   gl_FragColor = phong();
 }
 

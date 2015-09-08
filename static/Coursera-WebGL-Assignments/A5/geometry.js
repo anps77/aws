@@ -1,10 +1,29 @@
 "use strict";
 
+function Vector2D(x, y)
+{
+  this.x = x || 0;
+  this.y = y || 0;
+}
+
+Vector2D.attach = function(data) {
+  data.__proto__ = Vector2D.prototype;
+}
+
+function Point2D(radiusVector) {
+  this.radiusVector = radiusVector || new Vector2D();
+}
+
+Point2D.attach = function(data) {
+  data.__proto__ = Point2D.prototype;
+  Vector2D.attach(data.radiusVector);
+}
+
 function Vector(x, y, z)
 {
-    this.x = x || 0;
-    this.y = y || 0;
-    this.z = z || 0;
+  this.x = x || 0;
+  this.y = y || 0;
+  this.z = z || 0;
 }
 
 Vector.attach = function(data) {

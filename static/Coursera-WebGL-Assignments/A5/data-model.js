@@ -218,6 +218,8 @@ DataModel.prototype.loadFromGui = function(src) {
     this.selected.material.specularColor = this._loadFromGuiColor("input-material-specular-color");
 		this.selected.material.edgeDiffuseColor = this._loadFromGuiColor("input-material-edge-diffuse-color");
     this.selected.material.specularExponent = +$("#input-material-specular-exponent").val();
+    this.selected.texture = $("#input-material-texture").val();
+    this.selected.textureMultiplier = +$("#input-material-texture-multiplier").val();
 	}
 
   this.transformation.translateAmount = +$("#input-transformation-translate-amount").val();
@@ -319,6 +321,10 @@ DataModel.prototype.applyToGui = function() {
 
     $("#input-material-specular-exponent").val(0.0);
     $('#input-material-specular-exponent').prop('disabled', true);
+    $("#input-material-texture").val("");
+    $('#input-material-texture').prop('disabled', true);
+    $("#input-material-texture-multiplier").val(1.0);
+    $('#input-material-texture-multiplier').prop('disabled', true);
   } else if(this.selected instanceof Light) {
     $('#input-structure-active-object-name').val("(Light)");
 		$('#input-structure-active-object-name').prop('disabled', true);
@@ -392,6 +398,10 @@ DataModel.prototype.applyToGui = function() {
 
     $("#input-material-specular-exponent").val(0.0);
     $('#input-material-specular-exponent').prop('disabled', true);
+    $("#input-material-texture").val("");
+    $('#input-material-texture').prop('disabled', true);
+    $("#input-material-texture-multiplier").val(1.0);
+    $('#input-material-texture-multiplier').prop('disabled', true);
   } else {
 		$('#input-structure-active-object-name').val(this.selected.name);
 		$('#input-structure-active-object-name').prop('disabled', false);
@@ -440,6 +450,10 @@ DataModel.prototype.applyToGui = function() {
 
     $("#input-material-specular-exponent").val(this.selected.material.specularExponent);
     $('#input-material-specular-exponent').prop('disabled', false);
+    $("#input-material-texture").val(this.selected.texture);
+    $('#input-material-texture').prop('disabled', false);
+    $("#input-material-texture-multiplier").val(this.selected.textureMultiplier);
+    $('#input-material-texture-multiplier').prop('disabled', false);
 	}
 
 	$('#button-structure-remove-all-objects').prop('disabled', this.scene.model.meshes.length > 0 ? false : true);

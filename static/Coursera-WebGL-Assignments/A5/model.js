@@ -36,6 +36,8 @@ function Mesh() {
 	this.facets = [];
 	this.transformation = new Transformation();
 	this.material = new Material();
+	this.texture = ''; // Move to texture?
+	this.textureMultiplier = 1.0;
 	this.name = "unnamed";
 }
 
@@ -52,15 +54,17 @@ Mesh.attach = function(data) {
 	return data;
 }
 
-Mesh.Vertex = function(position, normal) {
+Mesh.Vertex = function(position, normal, tex) {
 	this.position = position;
 	this.normal = normal;
+	this.tex = tex;
 }
 
 Mesh.Vertex.attach = function(data) {
 	data.__proto__ = Mesh.Vertex.prototype;
 	Point.attach(data.position);
 	Vector.attach(data.normal);
+	Point2D.attach(data.tex);
 }
 
 Mesh.Facet = function(vi1, vi2, vi3) {
@@ -73,19 +77,22 @@ Mesh.Facet.attach = function(data) {
 	data.__proto__ = Mesh.Facet.prototype;
 }
 
-Mesh.newSphere = function(origin, radius, stacks, slices) {
+Mesh.newSphere = function(origin, radius, stacks, slices, texFun) {
 	origin = origin || new Point(new Vector(0.0, 0.0, 0.0));
 	radius = radius || 1.0;
 	stacks = stacks || 32;
 	slices = slices || 32;
-
-	function newSphereVertex(x, y, z, nx, ny, nz, phi, theta, tx, ty, tz) {
-		var s = 2.0, t = 1.0;
+	texFun = texFun || function() {
+		var s = 1.0, t = 1.0; // TODO: set s twice as t to balance disproportion if neccessary
 		var pi = Math.PI;
 		var two_pi = 2.0 * pi;
+		return new Point2D(new Vector2D(s * phi / two_pi, t * theta / pi));
+	};
+
+	function newSphereVertex(x, y, z, nx, ny, nz, phi, theta, tx, ty, tz) {
 		//          position           normal              material  tex st                                  tangent
 		//return{ { x, y, z, 1.0f }, { nx, ny, nz, 0.0f }, material, { s * phi / two_pi, t * theta / pi }, { tx, ty, tz, 0.0f } };
-		return new Mesh.Vertex(origin.add(new Vector(x, y, z)), new Vector(nx, ny, nz));
+		return new Mesh.Vertex(origin.add(new Vector(x, y, z)), new Vector(nx, ny, nz), texFun(phi. theta, nx, ny, nz));
 	}
 
 	var mesh = new Mesh();
@@ -137,7 +144,7 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 		for(var r = 0; r <= nr; ++r) {
 			var phi = 2.0 * Math.PI * r / nr;
 			var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(radius)), rvec));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(radius)), rvec, new Point2D(new Vector2D(r/nr, z/nz))));
 		}
 	}
 
@@ -153,12 +160,13 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 	}
 
   // XXX: proper normals on caps require separate vertex copies for them
-	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1)));
+	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1), new Point2D(new Vector2D(0.5, 0.5))));
 	var bottomCenter = mesh.vertices.length - 1;
 	for(var r = 0; r <= nr; ++r) {
 		var phi = 2.0 * Math.PI * r / nr;
-		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
-		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1)));
+		var rx = Math.cos(phi), ry = Math.sin(phi);
+		var rvec = vx.multiply(rx).add(vy.multiply(ry));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1), new Point2D(new Vector2D(0.5 + rx/2, 0.5 + ry/2))));
 	}
 	for(var r = 0; r < nr; ++r) {
 		var v0 = bottomCenter + r + 1;
@@ -166,12 +174,13 @@ Mesh.newCylinder = function(origin, radius, vz, vx, nz, nr) {
 		var v2 = bottomCenter + r + 2;
 		mesh.facets.push(new Mesh.Facet(v0, v1, v2));
 	}
-	mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)), vzn));
+	mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)), vzn, new Point2D(new Vector2D(0.5, 0.5))));
 	var topCenter = mesh.vertices.length - 1;
 	for(var r = 0; r <= nr; ++r) {
 		var phi = 2.0 * Math.PI * r / nr;
-		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
-		mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)).add(rvec.multiply(radius)), vzn));
+		var rx = Math.cos(phi), ry = Math.sin(phi);
+		var rvec = vx.multiply(rx).add(vy.multiply(ry));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(nz)).add(rvec.multiply(radius)), vzn, new Point2D(new Vector2D(0.5 + rx/2, 0.5 + ry/2))));
 	}
 	for(var r = 0; r < nr; ++r) {
 		var v0 = topCenter;
@@ -214,8 +223,9 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 		var k = (nz - z) / nz;
 		for(var r = 0; r <= nr; ++r) {
 			var phi = 2.0 * Math.PI * r / nr;
-			var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(k * radius)), rvec));
+			var rx = Math.cos(phi), ry = Math.sin(phi);
+			var rvec = vx.multiply(rx).add(vy.multiply(ry));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vz.multiply(z)).add(rvec.multiply(k * radius)), rvec, new Point2D(new Vector2D(r/nr, z/nz))));
 		}
 	}
 
@@ -231,12 +241,13 @@ Mesh.newCone = function(origin, radius, vz, vx, nz, nr) {
 	}
 
 	// XXX: proper normals on cap require separate vertex copies for them
-	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1)));
+	mesh.vertices.push(new Mesh.Vertex(origin, vzn.multiply(-1), new Point2D(new Vector2D(0.5, 0.5))));
 	var bottomCenter = mesh.vertices.length - 1;
 	for(var r = 0; r <= nr; ++r) {
 		var phi = 2.0 * Math.PI * r / nr;
-		var rvec = vx.multiply(Math.cos(phi)).add(vy.multiply(Math.sin(phi)));
-		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1)));
+		var rx = Math.cos(phi), ry = Math.sin(phi);
+		var rvec = vx.multiply(rx).add(vy.multiply(ry));
+		mesh.vertices.push(new Mesh.Vertex(origin.add(rvec.multiply(radius)), vzn.multiply(-1), new Point2D(new Vector2D(0.5 + rx/2, 0.5 + ry/2))));
 	}
 	for(var r = 0; r < nr; ++r) {
 		var v0 = bottomCenter + r + 1;
@@ -260,7 +271,7 @@ Mesh.newPlane = function(origin, vx, vy, nx, ny) {
 	var mesh = new Mesh();
 	for(var x = 0; x <= nx; ++x) {
 		for(var y = 0; y <= ny; ++y) {
-			mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(x)).add(vy.multiply(y)), vz));
+			mesh.vertices.push(new Mesh.Vertex(origin.add(vx.multiply(x)).add(vy.multiply(y)), vz, new Point2D(new Vector2D(x/nx, y/ny))));
 		}
 	}
 	for(var x = 0; x < nx; ++x) {
@@ -289,10 +300,10 @@ Mesh.newCube = function(origin, vx, vy, vz) {
   function side(o,a,b) {
 		var l = mesh.vertices.length;
 		var n = b.cross(a).getNormalized();
-		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(0)), n));
-		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(1)), n));
-		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(0)), n));
-		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(1)), n));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(0)), n, new Point2D(new Vector2D(0, 0))));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(0)).add(b.multiply(1)), n, new Point2D(new Vector2D(0, 1))));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(0)), n, new Point2D(new Vector2D(1, 0))));
+		mesh.vertices.push(new Mesh.Vertex(o.add(a.multiply(1)).add(b.multiply(1)), n, new Point2D(new Vector2D(1, 1))));
 		mesh.facets.push(new Mesh.Facet(l + 0, l + 1, l + 3));
 		mesh.facets.push(new Mesh.Facet(l + 0, l + 3, l + 2));
 	}
@@ -316,7 +327,7 @@ Mesh.newUnion = function(operands) {
 	for(var i = 0; i < operands.length; ++i) {
 		var op = operands[i];
 		for(var j = 0; j < op.vertices.length; ++j) {
-			mesh.vertices.push(new Mesh.Vertex(op.transformation.multiply(op.vertices[j].position), op.transformation.multiply(op.vertices[j].normal)));
+			mesh.vertices.push(new Mesh.Vertex(op.transformation.multiply(op.vertices[j].position), op.transformation.multiply(op.vertices[j].normal), op.vertices[j].tex));
 		}
 		for(var j = 0; j < op.facets.length; ++j) {
 			mesh.facets.push(new Mesh.Facet(op.facets[j].vi1 + vertexIndexOffset, op.facets[j].vi2 + vertexIndexOffset, op.facets[j].vi3 + vertexIndexOffset));
